@@ -1,0 +1,25 @@
+.input {
+    color: #333;
+    font-size: larger;
+    margin: auto;
+    margin-top: 100px;
+    padding: 20px 20px;
+    border-radius: 0.2rem;
+    background-color: rgb(255, 255, 255);
+    border: 2px solid black;
+    width: 60%;
+    display: block;
+    transition: all 0.3s;
+}
+
+.select {
+    text-align: center;
+    margin: 100px;
+    font-size: larger;
+    min-width: 100px;
+}
+
+.equals {
+    font-weight: bold;
+    font-size: 2rem;
+}

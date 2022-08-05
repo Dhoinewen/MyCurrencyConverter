@@ -1,0 +1,17 @@
+.header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background-color: beige;
+    padding: 20px;
+    border: 2px black solid;
+    border-radius: 5px;
+
+}
+
+
+.currency {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 20px;
+    text-align: center;
+}

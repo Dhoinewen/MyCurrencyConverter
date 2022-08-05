@@ -1,44 +1,58 @@
 import './App.css';
-import {useEffect, useState} from "react";
-import Main from "./main";
+import {useEffect, useMemo, useState} from "react";
+import Header from "./components/Header/Header";
+import CurrencyItem from "./components/CurrencyItem/CurrencyItem";
 
 
 const BASE_URL = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json'
 
 function App() {
+    const USD = "USD"
+    const EUR = "EUR"
+    const UAH = "UAH"
     const [allData, setAllData] = useState()
-    const [allCurrencies, setAllCurrencies] = useState([])
-    const [fromCurrency, setFromCurrency] = useState('UAH')
-    const [toCurrency, setToCurrency] = useState('USD')
+    const [fromCurrency, setFromCurrency] = useState(UAH)
+    const [toCurrency, setToCurrency] = useState(USD)
     const [rate, setRate] = useState(1)
-    const [amount, setAmount] = useState(1)
+    const [amount, setAmount] = useState(100)
     const [amountInFromCurrency, setAmountInFromCurrency] = useState(true)
+    const [isLoading, setIsLoading] = useState(true)
+
 
 
     useEffect(() => {
+        setIsLoading(true)
         fetch(BASE_URL)
             .then(responce => responce.json())
             .then(data => {
-                const currencies = data.map(aboba => {
-                    return aboba.cc
-                })
-                setAllCurrencies(currencies)
                 setAllData(data)
+                setIsLoading(false)
             })
     }, [])
 
 
-    const checkData = cc => {
-        if (allData !== undefined) {
-            return (allData.find(usd => usd.cc === cc)).rate
+
+    const allCurrencies = useMemo(() => {
+        if (isLoading === false) {
+            return allData.map(value => {
+                return value.cc
+            })
+        }
+    }, [allData, isLoading])
+
+
+    const getRate = currency => {
+        if (isLoading === false) {
+            return (allData.find(usd => usd.cc === currency)).rate
         }
     }
+
 
 
     let toAmount, fromAmount
     if (amountInFromCurrency) {
         fromAmount = amount
-        toAmount = amount * rate || amount * checkData("USD")
+        toAmount = amount * rate || amount / getRate(USD)
     } else {
         toAmount = (amount)
         fromAmount = amount / rate
@@ -46,22 +60,19 @@ function App() {
 
 
     useEffect(() => {
-        setRate(1)
-        if (fromCurrency === "UAH") {
-            if (toCurrency === "UAH") {
+        if (fromCurrency === UAH) {
+            if (toCurrency === UAH) {
                 setRate(1)
             } else {
-                setRate(1 / checkData(toCurrency))
+                setRate(1 / getRate(toCurrency))
             }
-        }
-        if (toCurrency === "UAH") {
-            if (fromCurrency === "UAH") {
-                setRate(1)
-            } else {
-                setRate(1 / checkData(fromCurrency))
+        }else {
+            if (toCurrency === UAH) {
+                setRate(1 / getRate(toCurrency))
             }
-        } else {
-            setRate(checkData(fromCurrency) / checkData(toCurrency))
+            else {
+                setRate(getRate(fromCurrency)/getRate(toCurrency))
+            }
         }
     }, [fromCurrency, toCurrency])
 
@@ -76,35 +87,33 @@ function App() {
         setAmountInFromCurrency(false)
     }
 
+
     return (
-        <div className="App">
-            <header className='header'>
-                <div className="title">
-                    <h2>Convert your money</h2>
-                </div>
-                <div className="currency">
-                    <span> 1 USD = {checkData("USD")} UAH</span>
-                    <span> 1 EUR = {checkData("EUR")} UAH</span>
-                </div>
-            </header>
-            <div className='main'>
-                <Main
-                    currencies={allCurrencies}
-                    selectedCurrency={fromCurrency}
-                    onChangeCurrency={e => setFromCurrency(e.target.value)}
-                    onChangeAmount={handleFromAmountChange}
-                    amount={fromAmount}
+        isLoading ? <h1>Loading...</h1> :
+            <div className="App">
+                <Header
+                    rateUSD={getRate(USD)}
+                    rateEUR={getRate(EUR)}
                 />
-                <div className='central'>=</div>
-                <Main
-                    currencies={allCurrencies}
-                    selectedCurrency={toCurrency}
-                    onChangeCurrency={e => setToCurrency(e.target.value)}
-                    onChangeAmount={handleToAmountChange}
-                    amount={toAmount}
-                />
+
+                <div className='main'>
+                    <CurrencyItem
+                        currencies={allCurrencies}
+                        selectedCurrency={fromCurrency}
+                        onChangeCurrency={e => setFromCurrency(e.target.value)}
+                        onChangeAmount={handleFromAmountChange}
+                        amount={fromAmount}
+                    />
+                    <div className='central'>=</div>
+                    <CurrencyItem
+                        currencies={allCurrencies}
+                        selectedCurrency={toCurrency}
+                        onChangeCurrency={e => setToCurrency(e.target.value)}
+                        onChangeAmount={handleToAmountChange}
+                        amount={toAmount}
+                    />
+                </div>
             </div>
-        </div>
     );
 }
 
